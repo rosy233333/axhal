@@ -72,12 +72,6 @@ pub mod misc {
     pub use super::platform::misc::*;
 }
 
-/// Multi-core operations.
-#[cfg(feature = "smp")]
-pub mod mp {
-    pub use super::platform::mp::*;
-}
-
 pub use self::platform::platform_init;
 pub use self::platform::platform_name;
 

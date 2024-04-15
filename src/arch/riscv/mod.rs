@@ -2,14 +2,11 @@
 mod macros;
 
 mod context;
-mod trap;
-#[cfg(feature = "monolithic")]
-pub use trap::first_into_user;
 
 pub use self::context::{GeneralRegisters, TaskContext, TrapFrame};
 use memory_addr::{PhysAddr, VirtAddr};
 use riscv::asm;
-use riscv::register::{satp, sstatus, stvec};
+use riscv::register::{satp, sstatus};
 
 /// Allows the current CPU to respond to interrupts.
 #[inline]
@@ -82,12 +79,6 @@ pub fn flush_tlb(vaddr: Option<VirtAddr>) {
     }
 }
 
-/// Writes Supervisor Trap Vector Base Address Register (`stvec`).
-#[inline]
-pub fn set_trap_vector_base(stvec: usize) {
-    unsafe { stvec::write(stvec, stvec::TrapMode::Direct) }
-}
-
 /// Reads the thread pointer of the current CPU.
 ///
 /// It is used to implement TLS (Thread Local Storage).
@@ -114,3 +105,52 @@ include_asm_marcos!();
 
 #[cfg(feature = "signal")]
 core::arch::global_asm!(include_str!("signal.S"));
+
+#[cfg(feature = "monolithic")]
+#[no_mangle]
+/// To handle the first time into the user space
+///
+/// 1. push the given trap frame into the kernel stack
+/// 2. go into the user space
+///
+/// args:
+///
+/// 1. kernel_sp: the top of the kernel stack
+///
+/// 2. frame_base: the address of the trap frame which will be pushed into the kernel stack
+pub fn first_into_user(kernel_sp: usize, frame_base: usize) {
+    // Make sure that all csr registers are stored before enable the interrupt
+
+    disable_irqs();
+    flush_tlb(None);
+    info!("trap: {:x?}", kernel_sp);
+    let trap_frame_size = core::mem::size_of::<TrapFrame>();
+    let kernel_base = kernel_sp - trap_frame_size;
+    unsafe {
+        core::arch::asm!(
+            r"
+            mv      sp, {frame_base}
+            .short  0x2432                      // fld fs0,264(sp)
+            .short  0x24d2                      // fld fs1,272(sp)
+            mv      t1, {kernel_base}
+            LDR     t0, sp, 2
+            STR     gp, t1, 2
+            mv      gp, t0
+            LDR     t0, sp, 3
+            STR     tp, t1, 3                   // save supervisor tp. Note that it is stored on the kernel stack rather than in sp, in which case the ID of the currently running CPU should be stored
+            mv      tp, t0                      // tp: now it stores the TLS pointer to the corresponding thread
+            csrw    sscratch, {kernel_sp}       // put supervisor sp to scratch
+            LDR     t0, sp, 31
+            LDR     t1, sp, 32
+            csrw    sepc, t0
+            csrw    sstatus, t1
+            POP_GENERAL_REGS
+            LDR     sp, sp, 1
+            sret
+        ",
+            frame_base = in(reg) frame_base,
+            kernel_sp = in(reg) kernel_sp,
+            kernel_base = in(reg) kernel_base,
+        );
+    };
+}
