@@ -18,7 +18,7 @@ global_asm!(include_str!("syscall.S"));
 #[no_mangle]
 fn x86_syscall_handler(tf: &mut TrapFrame) {
     tf.rax = handle_syscall(tf.get_syscall_num(), tf.get_syscall_args()) as u64;
-    #[cfg(feature = "signal")]
+
     crate::trap::handle_signal();
 }
 

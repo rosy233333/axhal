@@ -16,7 +16,6 @@ fp_simd = []
 paging = ["axalloc", "page_table"]
 irq = []
 tls = ["alloc"]
-signal = []
 monolithic = ["paging", "dep:axfs_ramfs"]
 default = []
 
@@ -39,7 +38,8 @@ memory_addr = { path = "../../crates/memory_addr" }
 handler_table = { path = "../../crates/handler_table" }
 crate_interface = { path = "../../crates/crate_interface" }
 axfs_ramfs = { path = "../../crates/axfs_ramfs", optional = true }
-riscv = "0.10"
+taskctx = { path = "../../crates/taskctx" }
+
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 x86 = "0.52"
 x86_64 = "0.14"

@@ -1,6 +1,5 @@
-use core::arch::asm;
-use memory_addr::VirtAddr;
 use riscv::register::sstatus::{self, Sstatus};
+use taskctx::TaskContext;
 include_asm_marcos!();
 
 /// General registers of RISC-V.
@@ -147,115 +146,64 @@ impl TrapFrame {
     }
 }
 
-/// Saved hardware states of a task.
+#[no_mangle]
+#[cfg(feature = "monolithic")]
+/// To handle the first time into the user space
 ///
-/// The context usually includes:
+/// 1. push the given trap frame into the kernel stack
+/// 2. go into the user space
 ///
-/// - Callee-saved registers
-/// - Stack pointer register
-/// - Thread pointer register (for thread-local storage, currently unsupported)
-/// - FP/SIMD registers
+/// args:
 ///
-/// On context switch, current task saves its context from CPU to memory,
-/// and the next task restores its context from memory to CPU.
-#[allow(missing_docs)]
-#[repr(C)]
-#[derive(Debug, Default)]
-pub struct TaskContext {
-    pub ra: usize, // return address (x1)
-    pub sp: usize, // stack pointer (x2)
+/// 1. kernel_sp: the top of the kernel stack
+///
+/// 2. frame_base: the address of the trap frame which will be pushed into the kernel stack
+pub fn first_into_user(kernel_sp: usize) {
+    // Make sure that all csr registers are stored before enable the interrupt
+    use crate::arch::{disable_irqs, flush_tlb};
 
-    pub s0: usize, // x8-x9
-    pub s1: usize,
+    disable_irqs();
+    flush_tlb(None);
 
-    pub s2: usize, // x18-x27
-    pub s3: usize,
-    pub s4: usize,
-    pub s5: usize,
-    pub s6: usize,
-    pub s7: usize,
-    pub s8: usize,
-    pub s9: usize,
-    pub s10: usize,
-    pub s11: usize,
-
-    pub tp: usize,
-    // TODO: FP states
+    let trap_frame_size = core::mem::size_of::<TrapFrame>();
+    let kernel_base = kernel_sp - trap_frame_size;
+    unsafe {
+        core::arch::asm!(
+            r"
+            mv      sp, {kernel_base}
+            .short  0x2432                      // fld fs0,264(sp)
+            .short  0x24d2                      // fld fs1,272(sp)
+            LDR     t0, sp, 2
+            STR     gp, sp, 2
+            mv      gp, t0
+            LDR     t0, sp, 3
+            STR     tp, sp, 3                   // save supervisor tp. Note that it is stored on the kernel stack rather than in sp, in which case the ID of the currently running CPU should be stored
+            mv      tp, t0                      // tp: now it stores the TLS pointer to the corresponding thread
+            csrw    sscratch, {kernel_sp}       // put supervisor sp to scratch
+            LDR     t0, sp, 31
+            LDR     t1, sp, 32
+            csrw    sepc, t0
+            csrw    sstatus, t1
+            POP_GENERAL_REGS
+            LDR     sp, sp, 1
+            sret
+        ",
+            kernel_sp = in(reg) kernel_sp,
+            kernel_base = in(reg) kernel_base,
+        );
+    };
 }
 
-impl TaskContext {
-    /// Creates a new default context for a new task.
-    pub const fn new() -> Self {
-        unsafe { core::mem::MaybeUninit::zeroed().assume_init() }
+#[allow(unused)]
+/// To switch the context between two tasks
+pub fn task_context_switch(prev_ctx: &mut TaskContext, next_ctx: &TaskContext) {
+    #[cfg(feature = "tls")]
+    {
+        prev_ctx.tp = super::read_thread_pointer();
+        unsafe { super::write_thread_pointer(next_ctx.tp) };
     }
-
-    pub fn new_empty() -> *mut TaskContext {
-        let task_ctx = TaskContext::new();
-        &task_ctx as *const TaskContext as *mut TaskContext
+    unsafe {
+        // TODO: switch FP states
+        taskctx::context_switch(prev_ctx, next_ctx)
     }
-
-    /// Initializes the context for a new task, with the given entry point and
-    /// kernel stack.
-    pub fn init(&mut self, entry: usize, kstack_top: VirtAddr, tls_area: VirtAddr) {
-        self.sp = kstack_top.as_usize();
-        self.ra = entry;
-        self.tp = tls_area.as_usize();
-    }
-
-    /// Switches to another task.
-    ///
-    /// It first saves the current task's context from CPU to this place, and then
-    /// restores the next task's context from `next_ctx` to CPU.
-    pub fn switch_to(&mut self, next_ctx: &Self) {
-        #[cfg(feature = "tls")]
-        {
-            self.tp = super::read_thread_pointer();
-            unsafe { super::write_thread_pointer(next_ctx.tp) };
-        }
-        unsafe {
-            // TODO: switch FP states
-            context_switch(self, next_ctx)
-        }
-    }
-}
-
-#[naked]
-unsafe extern "C" fn context_switch(_current_task: &mut TaskContext, _next_task: &TaskContext) {
-    asm!(
-        "
-        // save old context (callee-saved registers)
-        STR     ra, a0, 0
-        STR     sp, a0, 1
-        STR     s0, a0, 2
-        STR     s1, a0, 3
-        STR     s2, a0, 4
-        STR     s3, a0, 5
-        STR     s4, a0, 6
-        STR     s5, a0, 7
-        STR     s6, a0, 8
-        STR     s7, a0, 9
-        STR     s8, a0, 10
-        STR     s9, a0, 11
-        STR     s10, a0, 12
-        STR     s11, a0, 13
-
-        // restore new context
-        LDR     s11, a1, 13
-        LDR     s10, a1, 12
-        LDR     s9, a1, 11
-        LDR     s8, a1, 10
-        LDR     s7, a1, 9
-        LDR     s6, a1, 8
-        LDR     s5, a1, 7
-        LDR     s4, a1, 6
-        LDR     s3, a1, 5
-        LDR     s2, a1, 4
-        LDR     s1, a1, 3
-        LDR     s0, a1, 2
-        LDR     sp, a1, 1
-        LDR     ra, a1, 0
-
-        ret",
-        options(noreturn),
-    )
 }

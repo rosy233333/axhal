@@ -6,7 +6,7 @@ mod syscall;
 
 mod trap;
 #[cfg(feature = "monolithic")]
-pub use trap::first_into_user;
+pub use context::first_into_user;
 
 use core::arch::asm;
 
@@ -14,7 +14,7 @@ use memory_addr::{PhysAddr, VirtAddr};
 use x86::{controlregs, msr, tlb};
 use x86_64::instructions::interrupts;
 
-pub use self::context::{ExtendedState, FxsaveArea, TaskContext, TrapFrame};
+pub use self::context::TrapFrame;
 pub use self::gdt::GdtStruct;
 pub use self::idt::IdtStruct;
 pub use x86_64::structures::tss::TaskStateSegment;
@@ -116,5 +116,4 @@ pub unsafe fn write_thread_pointer(fs_base: usize) {
     unsafe { msr::wrmsr(msr::IA32_FS_BASE, fs_base as u64) }
 }
 
-#[cfg(feature = "signal")]
 core::arch::global_asm!(include_str!("signal.S"));

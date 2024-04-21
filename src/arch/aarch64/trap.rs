@@ -13,7 +13,6 @@ use crate::arch::{disable_irqs, enable_irqs};
 #[cfg(feature = "monolithic")]
 use crate::trap::handle_syscall;
 
-#[cfg(feature = "signal")]
 use crate::trap::handle_signal;
 
 #[repr(u8)]
