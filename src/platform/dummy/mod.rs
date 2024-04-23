@@ -11,6 +11,9 @@ pub mod console {
     pub fn getchar() -> Option<u8> {
         unimplemented!()
     }
+
+    /// Initializes the console.
+    pub fn init() {}
 }
 
 pub mod misc {

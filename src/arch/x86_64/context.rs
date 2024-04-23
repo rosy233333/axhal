@@ -1,3 +1,5 @@
+use taskctx::TaskContext;
+
 use super::GdtStruct;
 
 /// Saved registers when a trap (interrupt or exception) occurs.
@@ -194,7 +196,7 @@ pub fn task_context_switch(prev_ctx: &mut TaskContext, next_ctx: &TaskContext) {
     #[cfg(feature = "monolithic")]
     unsafe {
         // change gs data
-        asm!("mov     gs:[offset __PERCPU_KERNEL_RSP_OFFSET], {kernel_sp}", 
+        core::arch::asm!("mov     gs:[offset __PERCPU_KERNEL_RSP_OFFSET], {kernel_sp}", 
                 kernel_sp = in(reg) next_ctx.kstack_top.as_usize() + core::mem::size_of::<TrapFrame>());
     }
     crate::set_tss_stack_top(next_ctx.kstack_top + core::mem::size_of::<TrapFrame>());

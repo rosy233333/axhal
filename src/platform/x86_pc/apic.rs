@@ -63,12 +63,12 @@ pub fn dispatch_irq(vector: usize) {
     unsafe { local_apic().end_of_interrupt() };
 }
 
-pub(super) fn local_apic<'a>() -> &'a mut LocalApic {
+pub fn local_apic<'a>() -> &'a mut LocalApic {
     // It's safe as LAPIC is per-cpu.
     unsafe { LOCAL_APIC.as_mut().unwrap() }
 }
 
-pub(super) fn raw_apic_id(id_u8: u8) -> u32 {
+pub fn raw_apic_id(id_u8: u8) -> u32 {
     if unsafe { IS_X2APIC } {
         id_u8 as u32
     } else {

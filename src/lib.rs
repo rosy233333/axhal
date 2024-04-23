@@ -66,6 +66,11 @@ pub mod console {
     }
 }
 
+#[cfg(target_arch = "x86_64")]
+pub mod x86_64 {
+    pub use super::platform::*;
+}
+
 /// Miscellaneous operation, e.g. terminate the system.
 pub mod misc {
     pub use super::platform::misc::*;

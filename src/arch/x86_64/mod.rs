@@ -1,10 +1,7 @@
 mod context;
+pub use context::task_context_switch;
 mod gdt;
-mod idt;
-#[cfg(feature = "monolithic")]
-mod syscall;
 
-mod trap;
 #[cfg(feature = "monolithic")]
 pub use context::first_into_user;
 
@@ -16,7 +13,7 @@ use x86_64::instructions::interrupts;
 
 pub use self::context::TrapFrame;
 pub use self::gdt::GdtStruct;
-pub use self::idt::IdtStruct;
+
 pub use x86_64::structures::tss::TaskStateSegment;
 
 /// Allows the current CPU to respond to interrupts.
@@ -24,8 +21,6 @@ pub use x86_64::structures::tss::TaskStateSegment;
 pub fn enable_irqs() {
     #[cfg(target_os = "none")]
     interrupts::enable();
-    #[cfg(feature = "monolithic")]
-    syscall::init_syscall();
 }
 
 /// Makes the current CPU to ignore interrupts.

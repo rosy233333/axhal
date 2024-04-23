@@ -42,7 +42,7 @@ pub fn set_oneshot_timer(deadline_ns: u64) {
     }
 }
 
-pub(super) fn init_early() {
+pub fn init_early() {
     if let Some(freq) = CpuId::new()
         .get_processor_frequency_info()
         .map(|info| info.processor_base_frequency())
