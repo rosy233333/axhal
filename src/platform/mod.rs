@@ -1,7 +1,12 @@
 //! Platform-specific operations.
 
 cfg_if::cfg_if! {
-    if #[cfg(target_arch = "aarch64")]{
+    if #[cfg(all(target_arch = "aarch64", any(
+        platform_family = "aarch64-qemu-virt",
+        platform_family = "aarch64-raspi",
+        platform_family = "aarch64-bsta1000b",
+        platform_family = "aarch64-rk3588j")))]
+    {
         mod aarch64_common;
         pub use self::aarch64_common::*;
     }

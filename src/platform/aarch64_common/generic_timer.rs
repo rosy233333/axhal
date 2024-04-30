@@ -42,7 +42,7 @@ pub fn set_oneshot_timer(deadline_ns: u64) {
 }
 
 /// Early stage initialization: stores the timer frequency.
-pub(crate) fn init_early() {
+pub fn init_early() {
     let freq = CNTFRQ_EL0.get();
     unsafe {
         CNTPCT_TO_NANOS_RATIO = Ratio::new(crate::time::NANOS_PER_SEC as u32, freq as u32);

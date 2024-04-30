@@ -1,9 +1,3 @@
-mod boot;
-
-#[cfg(feature = "smp")]
-#[cfg(not(platform_family = "aarch64-raspi"))]
-pub mod mp;
-
 #[cfg(not(platform_family = "aarch64-raspi"))]
 pub mod psci;
 
@@ -36,46 +30,6 @@ cfg_if::cfg_if! {
 }
 
 pub mod mem;
-
-extern "C" {
-    fn exception_vector_base();
-    fn rust_main(cpu_id: usize, dtb: usize);
-    #[cfg(feature = "smp")]
-    fn rust_main_secondary(cpu_id: usize);
-}
-
-/// The earliest entry point for the secondary CPUs.
-pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
-    use crate::mem::phys_to_virt;
-    crate::mem::clear_bss();
-    crate::arch::set_exception_vector_base(exception_vector_base as usize);
-    crate::cpu::init_primary(cpu_id);
-
-    // init fdt
-    crate::platform::mem::idmap_device(dtb);
-    of::init_fdt_ptr(phys_to_virt(dtb.into()).as_usize() as *const u8);
-
-    // HugeMap all device memory for allocator
-    for m in of::memory_nodes() {
-        for r in m.regions() {
-            crate::platform::mem::idmap_device(r.starting_address as usize);
-        }
-    }
-
-    crate::platform::console::init_early();
-    crate::platform::time::init_early();
-    // disable low address access
-    crate::arch::write_page_table_root0(0.into());
-    rust_main(cpu_id, dtb);
-}
-
-#[cfg(feature = "smp")]
-pub(crate) unsafe extern "C" fn rust_entry_secondary(cpu_id: usize) {
-    crate::arch::set_exception_vector_base(exception_vector_base as usize);
-    crate::arch::write_page_table_root0(0.into()); // disable low address access
-    crate::cpu::init_secondary(cpu_id);
-    rust_main_secondary(cpu_id);
-}
 
 /// Initializes the platform devices for the primary CPU.
 ///

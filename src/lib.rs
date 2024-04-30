@@ -38,7 +38,8 @@ extern crate log;
 /// The kernel process ID, which is always 1.
 pub const KERNEL_PROCESS_ID: u64 = 1;
 
-mod platform;
+#[allow(missing_docs)]
+pub mod platform;
 
 pub mod arch;
 pub mod cpu;
@@ -64,11 +65,6 @@ pub mod console {
             putchar(*c);
         }
     }
-}
-
-#[cfg(target_arch = "x86_64")]
-pub mod x86_64 {
-    pub use super::platform::*;
 }
 
 /// Miscellaneous operation, e.g. terminate the system.

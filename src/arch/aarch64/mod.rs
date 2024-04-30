@@ -1,19 +1,15 @@
 mod context;
-pub(crate) mod trap;
-
+pub use context::task_context_switch;
 use core::arch::asm;
 
 #[cfg(feature = "monolithic")]
-pub use trap::first_into_user;
+pub use context::first_into_user;
 
-use aarch64_cpu::registers::{DAIF, TPIDR_EL0, TTBR0_EL1, TTBR1_EL1, VBAR_EL1};
+use aarch64_cpu::registers::{DAIF, TPIDR_EL0, TTBR0_EL1, TTBR1_EL1};
 use memory_addr::{PhysAddr, VirtAddr};
 use tock_registers::interfaces::{Readable, Writeable};
 
-pub use self::context::{FpState, TaskContext, TrapFrame};
-
-#[cfg(feature = "monolithic")]
-mod mem_fault;
+pub use self::context::TrapFrame;
 
 /// Allows the current CPU to respond to interrupts.
 #[inline]
@@ -108,12 +104,6 @@ pub fn flush_tlb(vaddr: Option<VirtAddr>) {
 #[inline]
 pub fn flush_icache_all() {
     unsafe { asm!("ic iallu; dsb sy; isb") };
-}
-
-/// Sets the base address of the exception vector (writes `VBAR_EL1`).
-#[inline]
-pub fn set_exception_vector_base(vbar_el1: usize) {
-    VBAR_EL1.set(vbar_el1 as _);
 }
 
 /// Flushes the data cache line (64 bytes) at the given virtual address

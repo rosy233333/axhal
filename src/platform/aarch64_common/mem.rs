@@ -92,8 +92,8 @@ fn free_regions() -> impl Iterator<Item = MemRegion> {
         name: "kernel memory",
     };
 
-    let filter_kernel_mem = all_mem.flat_map(move |m| split_region(m, &hack_k_region).into_iter());
-    filter_kernel_mem.flat_map(move |m| split_region(m, &fdt_region()).into_iter())
+    let filter_kernel_mem = all_mem.flat_map(move |m| split_region(m, &hack_k_region));
+    filter_kernel_mem.flat_map(move |m| split_region(m, &fdt_region()))
 }
 
 const FDT_FIX_SIZE: usize = 0x10_0000; //1M
@@ -113,7 +113,12 @@ static mut BOOT_PT_L0: [A64PTE; 512] = [A64PTE::empty(); 512];
 #[link_section = ".data.boot_page_table"]
 static mut BOOT_PT_L1: [A64PTE; 512] = [A64PTE::empty(); 512];
 
-pub(crate) unsafe fn init_mmu() {
+/// Initialize the MMU
+///
+/// # Safety
+///
+/// This function is unsafe because it directly manipulates the CPU registers.
+pub unsafe fn init_mmu() {
     MAIR_EL1.set(MemAttr::MAIR_VALUE);
 
     // Enable TTBR0 and TTBR1 walks, page size = 4K, vaddr size = 48 bits, paddr size = 40 bits.
@@ -148,7 +153,12 @@ pub(crate) unsafe fn init_mmu() {
 const BOOT_MAP_SHIFT: usize = 30; // 1GB
 const BOOT_MAP_SIZE: usize = 1 << BOOT_MAP_SHIFT; // 1GB
 
-pub(crate) unsafe fn idmap_kernel(kernel_phys_addr: usize) {
+/// Map the kernel image to the virtual address space.
+///
+/// # Safety
+///
+/// The function is unsafe because it directly modify the page table entries by dereferencing raw pointers.
+pub unsafe fn idmap_kernel(kernel_phys_addr: usize) {
     let aligned_address = (kernel_phys_addr) & !(BOOT_MAP_SIZE - 1);
     let l1_index = kernel_phys_addr >> BOOT_MAP_SHIFT;
 
@@ -162,7 +172,12 @@ pub(crate) unsafe fn idmap_kernel(kernel_phys_addr: usize) {
     );
 }
 
-pub(crate) unsafe fn idmap_device(phys_addr: usize) {
+/// Map a device with the given physical address to the page table.
+///
+/// # Safety
+///
+/// The function is unsafe because it directly modify the page table entries by dereferencing raw pointers.
+pub unsafe fn idmap_device(phys_addr: usize) {
     let aligned_address = (phys_addr) & !(BOOT_MAP_SIZE - 1);
     let l1_index = phys_addr >> BOOT_MAP_SHIFT;
     if BOOT_PT_L1[l1_index].is_unused() {
