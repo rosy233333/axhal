@@ -24,21 +24,21 @@ log = "0.4"
 cfg-if = "1.0"
 bitflags = "2.2"
 static_assertions = "1.1.0"
-axlog = { path = "../axlog" }
-axconfig = { path = "../axconfig" }
-axalloc = { path = "../axalloc", optional = true }
-kernel_guard = { path = "../../crates/kernel_guard" }
-spinlock = { path = "../../crates/spinlock" }
-ratio = { path = "../../crates/ratio" }
-lazy_init = { path = "../../crates/lazy_init" }
-page_table = { path = "../../crates/page_table", optional = true }
-page_table_entry = { path = "../../crates/page_table_entry" }
-percpu = { path = "../../crates/percpu" }
-memory_addr = { path = "../../crates/memory_addr" }
-handler_table = { path = "../../crates/handler_table" }
-crate_interface = { path = "../../crates/crate_interface" }
-axfs_ramfs = { path = "../../crates/axfs_ramfs", optional = true }
-taskctx = { path = "../../crates/taskctx" }
+axlog = { git = "https://github.com/Starry-OS/axlog.git" }
+axconfig = { git = "https://github.com/Starry-OS/axconfig.git" }
+axalloc = { git = "https://github.com/Starry-OS/axalloc.git", optional = true }
+kernel_guard = { git = "https://github.com/Starry-OS/kernel_guard.git" }
+spinlock = { git = "https://github.com/Starry-OS/spinlock.git" }
+ratio = { git = "https://github.com/Starry-OS/ratio.git" }
+lazy_init = { git = "https://github.com/Starry-OS/lazy_init.git" }
+page_table = { git = "https://github.com/Starry-OS/page_table.git", optional = true }
+page_table_entry = { git = "https://github.com/Starry-OS/page_table_entry.git" }
+percpu = { git = "https://github.com/Starry-OS/percpu.git" }
+memory_addr = { git = "https://github.com/Starry-OS/memory_addr.git" }
+handler_table = { git = "https://github.com/Starry-OS/handler_table.git" }
+crate_interface = { git = "https://github.com/Starry-OS/crate_interface.git" }
+axfs_ramfs = { git = "https://github.com/Starry-OS/axfs_ramfs.git", optional = true }
+taskctx = { git = "https://github.com/Starry-OS/taskctx.git" }
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 x86 = "0.52"
@@ -54,10 +54,10 @@ sbi-rt = { version = "0.0.2", features = ["legacy"] }
 aarch64-cpu = "9.3"
 tock-registers = "0.8"
 either = {version = "1.6", default-features = false}
-arm_gic = { path = "../../crates/arm_gic" }
-arm_pl011 = { path = "../../crates/arm_pl011" }
-dw_apb_uart = { path = "../../crates/dw_apb_uart" }
-of = { path = "../../crates/of"}
+arm_gic = { git = "https://github.com/Starry-OS/arm_gic.git" }
+arm_pl011 = { git = "https://github.com/Starry-OS/arm_pl011.git" }
+dw_apb_uart = { git = "https://github.com/Starry-OS/dw_apb_uart.git" }
+of = { git = "https://github.com/Starry-OS/of.git"}
 
 [build-dependencies]
-axconfig = { path = "../axconfig" }
+axconfig = { git = "https://github.com/Starry-OS/axconfig.git" }

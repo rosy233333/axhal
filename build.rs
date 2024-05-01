@@ -4,15 +4,15 @@ fn main() {
     let arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
     let platform = axconfig::PLATFORM;
     if platform != "dummy" {
-        gen_linker_script(&arch, platform).unwrap();
+        gen_linker_script(&arch).unwrap();
     }
 
     println!("cargo:rustc-cfg=platform=\"{}\"", platform);
     println!("cargo:rustc-cfg=platform_family=\"{}\"", axconfig::FAMILY);
 }
 
-fn gen_linker_script(arch: &str, platform: &str) -> Result<()> {
-    let fname = format!("linker_{}.lds", platform);
+fn gen_linker_script(arch: &str) -> Result<()> {
+    let fname = std::env::var("AX_LD_SCRIPT").unwrap();
     let output_arch = if arch == "x86_64" {
         "i386:x86-64"
     } else if arch.contains("riscv") {
