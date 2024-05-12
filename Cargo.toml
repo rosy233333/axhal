@@ -39,6 +39,7 @@ handler_table = { git = "https://github.com/Starry-OS/handler_table.git" }
 crate_interface = { git = "https://github.com/Starry-OS/crate_interface.git" }
 axfs_ramfs = { git = "https://github.com/Starry-OS/axfs_ramfs.git", optional = true }
 taskctx = { git = "https://github.com/Starry-OS/taskctx.git" }
+of = { git = "https://github.com/Starry-OS/of.git"}
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 x86 = "0.52"
@@ -57,7 +58,6 @@ either = {version = "1.6", default-features = false}
 arm_gic = { git = "https://github.com/Starry-OS/arm_gic.git" }
 arm_pl011 = { git = "https://github.com/Starry-OS/arm_pl011.git" }
 dw_apb_uart = { git = "https://github.com/Starry-OS/dw_apb_uart.git" }
-of = { git = "https://github.com/Starry-OS/of.git"}
 
 [build-dependencies]
 axconfig = { git = "https://github.com/Starry-OS/axconfig.git" }
