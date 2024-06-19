@@ -39,6 +39,9 @@ SECTIONS
         *(.data .data.*)
         *(.sdata .sdata.*)
         *(.got .got.*)
+	_initcall = .;
+	KEEP(*(.initcall))
+	_initcall_end =.;
     }
 
     .tdata : ALIGN(0x10) {
