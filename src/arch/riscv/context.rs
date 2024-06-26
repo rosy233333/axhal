@@ -98,6 +98,11 @@ impl TrapFrame {
         self.sepc = pc;
     }
 
+    /// pc 倒退到 syscall 指令的长度
+    pub fn rewind_pc(&mut self) {
+        self.sepc -= 4;
+    }
+
     /// 设置 arg0
     pub fn set_arg0(&mut self, arg: usize) {
         self.regs.a0 = arg;

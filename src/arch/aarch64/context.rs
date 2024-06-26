@@ -34,6 +34,11 @@ impl TrapFrame {
         self.elr = pc;
     }
 
+    /// pc 倒退到 syscall 指令的长度
+    pub fn rewind_pc(&mut self) {
+        self.elr -= 4;
+    }
+
     pub fn set_tls(&mut self, tls: usize) {
         self.tpidr_el0 = tls;
     }

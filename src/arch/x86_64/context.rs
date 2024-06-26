@@ -77,11 +77,6 @@ impl TrapFrame {
         self.rsp as _
     }
 
-    /// 设置 pc
-    pub fn set_pc(&mut self, pc: usize) {
-        self.rip = pc as _;
-    }
-
     /// 设置 arg0
     pub fn set_arg0(&mut self, arg: usize) {
         self.rdi = arg as _;
@@ -100,6 +95,16 @@ impl TrapFrame {
     /// 获取 pc
     pub fn get_pc(&self) -> usize {
         self.rip as _
+    }
+
+    /// 设置 pc
+    pub fn set_pc(&mut self, pc: usize) {
+        self.rip = pc as _;
+    }
+
+    /// pc 倒退到 syscall 指令的长度
+    pub fn rewind_pc(&mut self) {
+        self.rip -= 2;
     }
 
     /// 获取 ret
