@@ -23,7 +23,7 @@ default = []
 [dependencies]
 log = "0.4"
 cfg-if = "1.0"
-bitflags = "2.2"
+bitflags = "2.6"
 static_assertions = "1.1.0"
 axlog = { git = "https://github.com/Starry-OS/axlog.git" }
 axconfig = { git = "https://github.com/Starry-OS/axconfig.git" }
@@ -44,16 +44,16 @@ of = { git = "https://github.com/Starry-OS/of.git"}
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 x86 = "0.52"
-x86_64 = "0.14"
+x86_64 = "0.15"
 x2apic = "0.4"
 raw-cpuid = "11.0"
 
 [target.'cfg(any(target_arch = "riscv32", target_arch = "riscv64"))'.dependencies]
-riscv = "0.10"
-sbi-rt = { version = "0.0.2", features = ["legacy"] }
+riscv = "0.11"
+sbi-rt = { version = "0.0.3", features = ["legacy"] }
 
 [target.'cfg(target_arch = "aarch64")'.dependencies]
-aarch64-cpu = "9.3"
+aarch64-cpu = "9.4"
 tock-registers = "0.8"
 either = {version = "1.6", default-features = false}
 arm_gic = { git = "https://github.com/Starry-OS/arm_gic.git" }

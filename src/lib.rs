@@ -29,7 +29,7 @@
 #![feature(naked_functions)]
 #![feature(const_option)]
 #![feature(doc_auto_cfg)]
-
+#![feature(stmt_expr_attributes)]
 #[allow(unused_imports)]
 #[macro_use]
 extern crate log;
