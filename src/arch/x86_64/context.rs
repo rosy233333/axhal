@@ -48,14 +48,15 @@ impl TrapFrame {
 
     /// 用于第一次进入应用程序时的初始化
     pub fn app_init_context(app_entry: usize, user_sp: usize) -> Self {
-        // 当前版本的riscv不支持使用set_spp函数，需要手动修改
-        // 修改当前的sstatus为User，即是第8位置0
-        let mut trap_frame = TrapFrame::default();
-        trap_frame.set_user_sp(user_sp);
-        trap_frame.cs = GdtStruct::UCODE64_SELECTOR.0 as _;
-        trap_frame.ss = GdtStruct::UDATA_SELECTOR.0 as _;
-        trap_frame.rip = app_entry as _;
-        trap_frame
+        TrapFrame {
+            rip: app_entry as _,
+            cs: GdtStruct::UCODE64_SELECTOR.0 as _,
+            #[cfg(feature = "irq")]
+            rflags: x86_64::registers::rflags::RFlags::INTERRUPT_FLAG.bits() as _,
+            rsp: user_sp as _,
+            ss: GdtStruct::UDATA_SELECTOR.0 as _,
+            ..Default::default()
+        }
     }
 
     /// set the return code
